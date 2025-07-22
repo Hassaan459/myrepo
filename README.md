@@ -1,4 +1,4 @@
 # myrepo
 This is my first Git Repository.
 <br>
-Author- Hassaan Tariq
+Author- Hassaan Tariq [FAST NU]
