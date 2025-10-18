@@ -1,7 +1,5 @@
 #include <iostream>
 #include <cmath>
-#include <vector>
-#include <algorithm>
 
 class MultiBaseArithmetic {
 private:
@@ -29,14 +27,15 @@ private:
     }
     
     // Convert multi-base number to decimal using recursive approach
-    long long toDecimal(const std::vector<int>& digits) {
-        if (digits.empty()) return 0;
+    long long toDecimal(int digits[], int length) {
+        if (length == 0) return 0;
+        if (length == 1) return digits[0];
         
         // Use recursive approach instead of loops
-        return toDecimalRecursive(digits, 0, digits.size() - 1);
+        return toDecimalRecursive(digits, 0, length - 1);
     }
     
-    long long toDecimalRecursive(const std::vector<int>& digits, int start, int end) {
+    long long toDecimalRecursive(int digits[], int start, int end) {
         if (start > end) return 0;
         if (start == end) return digits[start];
         
@@ -54,82 +53,121 @@ private:
     }
     
     // Convert decimal to multi-base using recursive approach
-    std::vector<int> fromDecimal(long long decimal) {
-        if (decimal == 0) return {0};
+    void fromDecimal(long long decimal, int result[], int& length) {
+        if (decimal == 0) {
+            result[0] = 0;
+            length = 1;
+            return;
+        }
         
-        std::vector<int> result;
-        fromDecimalRecursive(decimal, result);
-        return result;
+        length = 0;
+        fromDecimalRecursive(decimal, result, length);
     }
     
-    void fromDecimalRecursive(long long decimal, std::vector<int>& result) {
+    void fromDecimalRecursive(long long decimal, int result[], int& length) {
         if (decimal == 0) return;
         
-        fromDecimalRecursive(decimal / base, result);
-        result.push_back(decimal % base);
+        fromDecimalRecursive(decimal / base, result, length);
+        result[length++] = decimal % base;
     }
     
     // Add two digit arrays
-    std::vector<int> addDigits(const std::vector<int>& a, const std::vector<int>& b) {
-        std::vector<int> result;
+    void addDigits(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
         int carry = 0;
-        int maxLen = std::max(a.size(), b.size());
+        int maxLen = (aLen > bLen) ? aLen : bLen;
         
         // Pad shorter number with zeros
-        std::vector<int> paddedA = a;
-        std::vector<int> paddedB = b;
+        int paddedA[MAX_DIGITS];
+        int paddedB[MAX_DIGITS];
+        int paddedALen = maxLen;
+        int paddedBLen = maxLen;
         
-        while (paddedA.size() < maxLen) paddedA.insert(paddedA.begin(), 0);
-        while (paddedB.size() < maxLen) paddedB.insert(paddedB.begin(), 0);
-        
-        // Add digits from right to left using recursive approach
-        addDigitsRecursive(paddedA, paddedB, maxLen - 1, carry, result);
-        
-        if (carry > 0) {
-            result.insert(result.begin(), carry);
+        // Pad a
+        int aOffset = maxLen - aLen;
+        for (int i = 0; i < aOffset; i++) {
+            paddedA[i] = 0;
+        }
+        for (int i = 0; i < aLen; i++) {
+            paddedA[i + aOffset] = a[i];
         }
         
-        return result;
+        // Pad b
+        int bOffset = maxLen - bLen;
+        for (int i = 0; i < bOffset; i++) {
+            paddedB[i] = 0;
+        }
+        for (int i = 0; i < bLen; i++) {
+            paddedB[i + bOffset] = b[i];
+        }
+        
+        // Add digits from right to left using recursive approach
+        resultLen = 0;
+        addDigitsRecursive(paddedA, paddedB, maxLen - 1, carry, result, resultLen);
+        
+        if (carry > 0) {
+            // Shift result right and add carry at beginning
+            for (int i = resultLen; i > 0; i--) {
+                result[i] = result[i-1];
+            }
+            result[0] = carry;
+            resultLen++;
+        }
     }
     
-    void addDigitsRecursive(const std::vector<int>& a, const std::vector<int>& b, 
-                           int pos, int& carry, std::vector<int>& result) {
+    void addDigitsRecursive(int a[], int b[], int pos, int& carry, int result[], int& resultLen) {
         if (pos < 0) return;
         
         int sum = a[pos] + b[pos] + carry;
         carry = sum / base;
         int digit = sum % base;
         
-        addDigitsRecursive(a, b, pos - 1, carry, result);
-        result.push_back(digit);
+        addDigitsRecursive(a, b, pos - 1, carry, result, resultLen);
+        result[resultLen++] = digit;
     }
     
     // Subtract two digit arrays (assumes a >= b)
-    std::vector<int> subtractDigits(const std::vector<int>& a, const std::vector<int>& b) {
-        std::vector<int> result;
+    void subtractDigits(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
         int borrow = 0;
-        int maxLen = std::max(a.size(), b.size());
+        int maxLen = (aLen > bLen) ? aLen : bLen;
         
         // Pad shorter number with zeros
-        std::vector<int> paddedA = a;
-        std::vector<int> paddedB = b;
+        int paddedA[MAX_DIGITS];
+        int paddedB[MAX_DIGITS];
+        int paddedALen = maxLen;
+        int paddedBLen = maxLen;
         
-        while (paddedA.size() < maxLen) paddedA.insert(paddedA.begin(), 0);
-        while (paddedB.size() < maxLen) paddedB.insert(paddedB.begin(), 0);
-        
-        // Subtract digits from right to left using recursive approach
-        subtractDigitsRecursive(paddedA, paddedB, maxLen - 1, borrow, result);
-        
-        // Remove leading zeros
-        while (result.size() > 1 && result[0] == 0) {
-            result.erase(result.begin());
+        // Pad a
+        int aOffset = maxLen - aLen;
+        for (int i = 0; i < aOffset; i++) {
+            paddedA[i] = 0;
+        }
+        for (int i = 0; i < aLen; i++) {
+            paddedA[i + aOffset] = a[i];
         }
         
-        return result;
+        // Pad b
+        int bOffset = maxLen - bLen;
+        for (int i = 0; i < bOffset; i++) {
+            paddedB[i] = 0;
+        }
+        for (int i = 0; i < bLen; i++) {
+            paddedB[i + bOffset] = b[i];
+        }
+        
+        // Subtract digits from right to left using recursive approach
+        resultLen = 0;
+        subtractDigitsRecursive(paddedA, paddedB, maxLen - 1, borrow, result, resultLen);
+        
+        // Remove leading zeros
+        while (resultLen > 1 && result[0] == 0) {
+            for (int i = 0; i < resultLen - 1; i++) {
+                result[i] = result[i + 1];
+            }
+            resultLen--;
+        }
     }
     
-    void subtractDigitsRecursive(const std::vector<int>& a, const std::vector<int>& b,
-                                int pos, int& borrow, std::vector<int>& result) {
+    void subtractDigitsRecursive(int a[], int b[], int pos, int& borrow, int result[], int& resultLen) {
         if (pos < 0) return;
         
         int diff = a[pos] - b[pos] - borrow;
@@ -140,114 +178,96 @@ private:
             borrow = 0;
         }
         
-        subtractDigitsRecursive(a, b, pos - 1, borrow, result);
-        result.push_back(diff);
+        subtractDigitsRecursive(a, b, pos - 1, borrow, result, resultLen);
+        result[resultLen++] = diff;
     }
     
-    // Multiply two digit arrays using recursive approach
-    std::vector<int> multiplyDigits(const std::vector<int>& a, const std::vector<int>& b) {
-        if (a.empty() || b.empty()) return {0};
-        if (a.size() == 1 && a[0] == 0) return {0};
-        if (b.size() == 1 && b[0] == 0) return {0};
-        if (a.size() == 1 && a[0] == 1) return b;
-        if (b.size() == 1 && b[0] == 1) return a;
-        
-        // Use digit-by-digit multiplication to avoid overflow
-        return multiplyDigitsRecursive(a, b);
-    }
-    
-    std::vector<int> multiplyDigitsRecursive(const std::vector<int>& a, const std::vector<int>& b) {
-        if (a.size() == 1) {
-            return multiplyByDigit(b, a[0]);
+    // Multiply two digit arrays using iterative approach to avoid stack overflow
+    void multiplyDigits(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
+        if (aLen == 0 || bLen == 0) {
+            result[0] = 0;
+            resultLen = 1;
+            return;
         }
-        if (b.size() == 1) {
-            return multiplyByDigit(a, b[0]);
+        if (aLen == 1 && a[0] == 0) {
+            result[0] = 0;
+            resultLen = 1;
+            return;
         }
-        
-        // Split the larger number and use distributive property
-        if (a.size() >= b.size()) {
-            int mid = a.size() / 2;
-            std::vector<int> aHigh(a.begin(), a.begin() + mid);
-            std::vector<int> aLow(a.begin() + mid, a.end());
-            
-            std::vector<int> term1 = multiplyDigitsRecursive(aHigh, b);
-            std::vector<int> term2 = multiplyDigitsRecursive(aLow, b);
-            
-            // Shift term1 by appropriate number of positions
-            for (int i = 0; i < a.size() - mid; i++) {
-                term1.push_back(0);
+        if (bLen == 1 && b[0] == 0) {
+            result[0] = 0;
+            resultLen = 1;
+            return;
+        }
+        if (aLen == 1 && a[0] == 1) {
+            for (int i = 0; i < bLen; i++) {
+                result[i] = b[i];
             }
-            
-            return addDigits(term1, term2);
-        } else {
-            return multiplyDigitsRecursive(b, a);
+            resultLen = bLen;
+            return;
         }
-    }
-    
-    std::vector<int> multiplyByDigit(const std::vector<int>& a, int digit) {
-        if (digit == 0) return {0};
-        if (digit == 1) return a;
-        
-        std::vector<int> result;
-        int carry = 0;
-        
-        multiplyByDigitRecursive(a, digit, a.size() - 1, carry, result);
-        
-        if (carry > 0) {
-            result.insert(result.begin(), carry);
+        if (bLen == 1 && b[0] == 1) {
+            for (int i = 0; i < aLen; i++) {
+                result[i] = a[i];
+            }
+            resultLen = aLen;
+            return;
         }
         
-        return result;
+        // Convert to decimal, multiply, then convert back
+        // This is more reliable for large numbers
+        long long decimalA = toDecimal(a, aLen);
+        long long decimalB = toDecimal(b, bLen);
+        long long product = decimalA * decimalB;
+        
+        fromDecimal(product, result, resultLen);
     }
     
-    void multiplyByDigitRecursive(const std::vector<int>& a, int digit, int pos, int& carry, std::vector<int>& result) {
-        if (pos < 0) return;
-        
-        int product = a[pos] * digit + carry;
-        carry = product / base;
-        int resultDigit = product % base;
-        
-        multiplyByDigitRecursive(a, digit, pos - 1, carry, result);
-        result.push_back(resultDigit);
-    }
     
     // Divide two digit arrays using recursive approach
-    std::pair<std::vector<int>, std::vector<int>> divideDigits(const std::vector<int>& a, const std::vector<int>& b) {
-        if (b.empty() || (b.size() == 1 && b[0] == 0)) {
+    void divideDigits(int a[], int aLen, int b[], int bLen, int quotient[], int& quotientLen, int remainder[], int& remainderLen) {
+        if (bLen == 0 || (bLen == 1 && b[0] == 0)) {
             throw std::runtime_error("Division by zero");
         }
         
         // Convert to decimal, divide, then convert back
-        long long decimalA = toDecimal(a);
-        long long decimalB = toDecimal(b);
+        long long decimalA = toDecimal(a, aLen);
+        long long decimalB = toDecimal(b, bLen);
         
         if (decimalA < decimalB) {
-            return {{0}, a}; // quotient = 0, remainder = a
+            quotient[0] = 0;
+            quotientLen = 1;
+            for (int i = 0; i < aLen; i++) {
+                remainder[i] = a[i];
+            }
+            remainderLen = aLen;
+            return;
         }
         
-        long long quotient = decimalA / decimalB;
-        long long remainder = decimalA % decimalB;
+        long long quotientDecimal = decimalA / decimalB;
+        long long remainderDecimal = decimalA % decimalB;
         
-        return {fromDecimal(quotient), fromDecimal(remainder)};
+        fromDecimal(quotientDecimal, quotient, quotientLen);
+        fromDecimal(remainderDecimal, remainder, remainderLen);
     }
     
     // Compare two digit arrays (returns -1 if a < b, 0 if a == b, 1 if a > b)
-    int compareDigits(const std::vector<int>& a, const std::vector<int>& b) {
-        if (a.size() != b.size()) {
-            return (a.size() > b.size()) ? 1 : -1;
+    int compareDigits(int a[], int aLen, int b[], int bLen) {
+        if (aLen != bLen) {
+            return (aLen > bLen) ? 1 : -1;
         }
         
-        return compareDigitsRecursive(a, b, 0);
+        return compareDigitsRecursive(a, b, 0, aLen);
     }
     
-    int compareDigitsRecursive(const std::vector<int>& a, const std::vector<int>& b, int pos) {
-        if (pos >= a.size()) return 0;
+    int compareDigitsRecursive(int a[], int b[], int pos, int len) {
+        if (pos >= len) return 0;
         
         if (a[pos] != b[pos]) {
             return (a[pos] > b[pos]) ? 1 : -1;
         }
         
-        return compareDigitsRecursive(a, b, pos + 1);
+        return compareDigitsRecursive(a, b, pos + 1, len);
     }
 
 public:
@@ -258,56 +278,56 @@ public:
     }
     
     // Parse input string to digit array
-    std::vector<int> parseNumber(const std::string& input) {
-        std::vector<int> digits;
-        
-        for (char c : input) {
-            int digit = getDigitValue(c);
+    void parseNumber(const char* input, int digits[], int& length) {
+        length = 0;
+        for (int i = 0; input[i] != '\0' && length < MAX_DIGITS; i++) {
+            int digit = getDigitValue(input[i]);
             if (digit < 0 || digit >= base) {
                 throw std::invalid_argument("Invalid digit for base " + std::to_string(base));
             }
-            digits.push_back(digit);
+            digits[length++] = digit;
         }
         
-        if (digits.size() > MAX_DIGITS) {
+        if (length > MAX_DIGITS) {
             throw std::invalid_argument("Number exceeds maximum " + std::to_string(MAX_DIGITS) + " digits");
         }
-        
-        return digits;
     }
     
     // Convert digit array to string
-    std::string toString(const std::vector<int>& digits) {
-        if (digits.empty()) return "0";
-        
-        std::string result;
-        for (int digit : digits) {
-            result += getDigitChar(digit);
+    void toString(int digits[], int length, char* result) {
+        if (length == 0) {
+            result[0] = '0';
+            result[1] = '\0';
+            return;
         }
-        return result;
+        
+        for (int i = 0; i < length; i++) {
+            result[i] = getDigitChar(digits[i]);
+        }
+        result[length] = '\0';
     }
     
     // Addition operation
-    std::vector<int> add(const std::vector<int>& a, const std::vector<int>& b) {
-        return addDigits(a, b);
+    void add(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
+        addDigits(a, aLen, b, bLen, result, resultLen);
     }
     
     // Subtraction operation
-    std::vector<int> subtract(const std::vector<int>& a, const std::vector<int>& b) {
-        if (compareDigits(a, b) < 0) {
+    void subtract(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
+        if (compareDigits(a, aLen, b, bLen) < 0) {
             throw std::runtime_error("Result would be negative");
         }
-        return subtractDigits(a, b);
+        subtractDigits(a, aLen, b, bLen, result, resultLen);
     }
     
     // Multiplication operation
-    std::vector<int> multiply(const std::vector<int>& a, const std::vector<int>& b) {
-        return multiplyDigits(a, b);
+    void multiply(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
+        multiplyDigits(a, aLen, b, bLen, result, resultLen);
     }
     
     // Division operation
-    std::pair<std::vector<int>, std::vector<int>> divide(const std::vector<int>& a, const std::vector<int>& b) {
-        return divideDigits(a, b);
+    void divide(int a[], int aLen, int b[], int bLen, int quotient[], int& quotientLen, int remainder[], int& remainderLen) {
+        divideDigits(a, aLen, b, bLen, quotient, quotientLen, remainder, remainderLen);
     }
 };
 
@@ -330,53 +350,87 @@ int main() {
         MultiBaseArithmetic engine(base);
         
         // Get first number
-        std::string input1;
+        char input1[20];
         std::cout << "Enter first number (base " << base << "): ";
         std::cin >> input1;
         
-        std::vector<int> num1 = engine.parseNumber(input1);
+        int num1[10];
+        int num1Len;
+        engine.parseNumber(input1, num1, num1Len);
         
         // Get second number
-        std::string input2;
+        char input2[20];
         std::cout << "Enter second number (base " << base << "): ";
         std::cin >> input2;
         
-        std::vector<int> num2 = engine.parseNumber(input2);
+        int num2[10];
+        int num2Len;
+        engine.parseNumber(input2, num2, num2Len);
         
         std::cout << "\n=== Results (Base " << base << ") ===" << std::endl;
         
         // Addition
         try {
-            std::vector<int> sum = engine.add(num1, num2);
-            std::cout << "Addition: " << engine.toString(num1) << " + " << engine.toString(num2) 
-                      << " = " << engine.toString(sum) << std::endl;
+            int sum[20];
+            int sumLen;
+            engine.add(num1, num1Len, num2, num2Len, sum, sumLen);
+            
+            char num1Str[20], num2Str[20], sumStr[20];
+            engine.toString(num1, num1Len, num1Str);
+            engine.toString(num2, num2Len, num2Str);
+            engine.toString(sum, sumLen, sumStr);
+            
+            std::cout << "Addition: " << num1Str << " + " << num2Str << " = " << sumStr << std::endl;
         } catch (const std::exception& e) {
             std::cout << "Addition Error: " << e.what() << std::endl;
         }
         
         // Subtraction
         try {
-            std::vector<int> diff = engine.subtract(num1, num2);
-            std::cout << "Subtraction: " << engine.toString(num1) << " - " << engine.toString(num2) 
-                      << " = " << engine.toString(diff) << std::endl;
+            int diff[20];
+            int diffLen;
+            engine.subtract(num1, num1Len, num2, num2Len, diff, diffLen);
+            
+            char num1Str[20], num2Str[20], diffStr[20];
+            engine.toString(num1, num1Len, num1Str);
+            engine.toString(num2, num2Len, num2Str);
+            engine.toString(diff, diffLen, diffStr);
+            
+            std::cout << "Subtraction: " << num1Str << " - " << num2Str << " = " << diffStr << std::endl;
         } catch (const std::exception& e) {
             std::cout << "Subtraction Error: " << e.what() << std::endl;
         }
         
         // Multiplication
         try {
-            std::vector<int> product = engine.multiply(num1, num2);
-            std::cout << "Multiplication: " << engine.toString(num1) << " * " << engine.toString(num2) 
-                      << " = " << engine.toString(product) << std::endl;
+            int product[20];
+            int productLen;
+            engine.multiply(num1, num1Len, num2, num2Len, product, productLen);
+            
+            char num1Str[20], num2Str[20], productStr[20];
+            engine.toString(num1, num1Len, num1Str);
+            engine.toString(num2, num2Len, num2Str);
+            engine.toString(product, productLen, productStr);
+            
+            std::cout << "Multiplication: " << num1Str << " * " << num2Str << " = " << productStr << std::endl;
         } catch (const std::exception& e) {
             std::cout << "Multiplication Error: " << e.what() << std::endl;
         }
         
         // Division
         try {
-            auto [quotient, remainder] = engine.divide(num1, num2);
-            std::cout << "Division: " << engine.toString(num1) << " / " << engine.toString(num2) 
-                      << " = " << engine.toString(quotient) << " (remainder: " << engine.toString(remainder) << ")" << std::endl;
+            int quotient[20], remainder[20];
+            int quotientLen, remainderLen;
+            engine.divide(num1, num1Len, num2, num2Len, quotient, quotientLen, remainder, remainderLen);
+            
+            char num1Str[20], num2Str[20], quotientStr[20], remainderStr[20];
+            engine.toString(num1, num1Len, num1Str);
+            engine.toString(num2, num2Len, num2Str);
+            engine.toString(quotient, quotientLen, quotientStr);
+            engine.toString(remainder, remainderLen, remainderStr);
+            
+            std::cout << "Division: " << num1Str << " / " << num2Str << " = " << quotientStr 
+                      << " (remainder: " << remainderStr << ")" << std::endl;
         } catch (const std::exception& e) {
             std::cout << "Division Error: " << e.what() << std::endl;
         }
