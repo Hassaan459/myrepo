@@ -182,7 +182,7 @@ private:
         result[resultLen++] = diff;
     }
     
-    // Multiply two digit arrays using iterative approach to avoid stack overflow
+    // Multiply two digit arrays using digit-by-digit multiplication
     void multiplyDigits(int a[], int aLen, int b[], int bLen, int result[], int& resultLen) {
         if (aLen == 0 || bLen == 0) {
             result[0] = 0;
@@ -214,13 +214,49 @@ private:
             return;
         }
         
-        // Convert to decimal, multiply, then convert back
-        // This is more reliable for large numbers
-        long long decimalA = toDecimal(a, aLen);
-        long long decimalB = toDecimal(b, bLen);
-        long long product = decimalA * decimalB;
+        // Initialize result array with zeros
+        int tempResult[MAX_DIGITS * 2];
+        for (int i = 0; i < MAX_DIGITS * 2; i++) {
+            tempResult[i] = 0;
+        }
         
-        fromDecimal(product, result, resultLen);
+        // Multiply each digit of a with each digit of b
+        for (int i = aLen - 1; i >= 0; i--) {
+            for (int j = bLen - 1; j >= 0; j--) {
+                int product = a[i] * b[j];
+                int pos1 = i + j;
+                int pos2 = i + j + 1;
+                
+                // Add product to tempResult
+                product += tempResult[pos2];
+                tempResult[pos2] = product % base;
+                tempResult[pos1] += product / base;
+                
+                // Handle carry
+                int carry = tempResult[pos1] / base;
+                tempResult[pos1] %= base;
+                int k = pos1 - 1;
+                while (carry > 0 && k >= 0) {
+                    tempResult[k] += carry;
+                    carry = tempResult[k] / base;
+                    tempResult[k] %= base;
+                    k--;
+                }
+            }
+        }
+        
+        // Find the actual length of the result
+        resultLen = 0;
+        for (int i = 0; i < MAX_DIGITS * 2; i++) {
+            if (tempResult[i] != 0 || resultLen > 0) {
+                result[resultLen++] = tempResult[i];
+            }
+        }
+        
+        if (resultLen == 0) {
+            result[0] = 0;
+            resultLen = 1;
+        }
     }
     
     

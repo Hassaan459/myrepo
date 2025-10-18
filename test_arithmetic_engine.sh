@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "=== Advanced Multi-Base Arithmetic Engine Test Suite ==="
-echo "Testing various bases and edge cases..."
+echo "Testing various bases and edge cases (Array-based implementation)..."
 echo ""
 
 # Test 1: Binary arithmetic
@@ -72,6 +72,20 @@ echo "Test 10: Maximum binary number (10 digits)"
 echo "2
 1111111111
 1" | ./advanced_arithmetic_engine
+echo ""
+
+# Test 11: Edge case - Maximum hexadecimal
+echo "Test 11: Maximum hexadecimal number (10 digits)"
+echo "16
+FFFFFFFFF
+1" | ./advanced_arithmetic_engine
+echo ""
+
+# Test 12: Edge case - Division by zero
+echo "Test 12: Division by zero error handling"
+echo "10
+1234567890
+0" | ./advanced_arithmetic_engine
 echo ""
 
 echo "=== All tests completed ==="

@@ -1,6 +1,6 @@
 # Advanced Multi-Base Arithmetic Engine
 
-A sophisticated arithmetic engine capable of performing mathematical operations on numbers up to 10 digits long across multiple numeral systems (bases 2-16) without using string data types or loops.
+A sophisticated arithmetic engine capable of performing mathematical operations on numbers up to 10 digits long across multiple numeral systems (bases 2-16) without using string data types, vectors, or loops.
 
 ## Features
 
@@ -8,6 +8,7 @@ A sophisticated arithmetic engine capable of performing mathematical operations 
 - **Large Number Support**: Processes numbers up to 10 digits in any supported base
 - **Four Arithmetic Operations**: Addition, subtraction, multiplication, and division
 - **No String Operations**: Uses only numeric data types and algorithmic techniques
+- **No Vectors/Containers**: Uses only basic arrays and fundamental data types
 - **No Loops**: Implements all operations using recursive algorithms
 - **Precision Guaranteed**: Handles the full 10-digit range with mathematical exactitude
 
@@ -18,20 +19,22 @@ A sophisticated arithmetic engine capable of performing mathematical operations 
 1. **Base Conversion**: Recursive algorithms for converting between any base and decimal
 2. **Addition**: Digit-by-digit addition with carry propagation using recursion
 3. **Subtraction**: Digit-by-digit subtraction with borrow handling using recursion
-4. **Multiplication**: Recursive multiplication using distributive property and digit-by-digit operations
+4. **Multiplication**: Digit-by-digit multiplication with proper carry handling
 5. **Division**: Long division algorithm with quotient and remainder calculation
 
 ### Data Structures
 
-- Uses `std::vector<int>` to represent multi-digit numbers
-- Each element represents a single digit in the specified base
+- Uses basic `int` arrays to represent multi-digit numbers
+- Each array element represents a single digit in the specified base
 - Maximum of 10 digits supported per number
+- No dynamic memory allocation or standard library containers
 
 ### Constraints Met
 
 - ✅ No string data types or string library functions
+- ✅ No vectors or standard library containers
 - ✅ No loops (for, while, do-while)
-- ✅ Works with actual numeric types
+- ✅ Works with actual numeric types and basic arrays only
 - ✅ Handles up to 10-digit numbers
 - ✅ Supports bases 2-16
 - ✅ All four arithmetic operations implemented
@@ -116,8 +119,9 @@ The system includes comprehensive error handling for:
 
 - **Time Complexity**: O(n) for addition/subtraction, O(n²) for multiplication, O(n²) for division
 - **Space Complexity**: O(n) where n is the number of digits
-- **Memory Usage**: Minimal - only stores digit arrays and temporary variables
+- **Memory Usage**: Minimal - only uses fixed-size arrays and basic variables
 - **Precision**: Exact arithmetic with no floating-point errors
+- **No Dynamic Allocation**: All memory usage is stack-based with fixed arrays
 
 ## Applications
 
